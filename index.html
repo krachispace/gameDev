@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pixel Adventure</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #87CEEB; /* Sky blue background */
+  }
+  canvas {
+    display: block; /* Remove extra space below canvas */
+    background-color: #228B22; /* Grass green background */
+    width: 100vw;
+    height: 100vh;
+  }
+  #controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+  }
+  #controls button {
+    padding: 10px 15px;
+    background-color: #ddd;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="controls">
+  <button onclick="movePlayer('up')">Up</button>
+  <button onclick="movePlayer('left')">Left</button>
+  <button onclick="movePlayer('right')">Right</button>
+  <button onclick="movePlayer('down')">Down</button>
+</div>
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let posX = 100, posY = 100;
+  let inHouse = false, showingCredits = false;
+
+  function drawPlayer() {
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.arc(posX, posY, 10, 0, Math.PI * 2); // Head
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(posX, posY + 10); // Body
+    ctx.lineTo(posX, posY + 30);
+    ctx.stroke();
+    ctx.moveTo(posX, posY + 15); // Arms
+    ctx.lineTo(posX - 10, posY + 20);
+    ctx.moveTo(posX, posY + 15);
+    ctx.lineTo(posX + 10, posY + 20);
+    ctx.stroke();
+    ctx.moveTo(posX, posY + 30); // Legs
+    ctx.lineTo(posX - 10, posY + 40);
+    ctx.moveTo(posX, posY + 30);
+    ctx.lineTo(posX + 10, posY + 40);
+    ctx.stroke();
+  }
+
+  function drawHouse() {
+    ctx.fillStyle = 'sienna';
+    ctx.fillRect(200, 150, 100, 100); // House base
+    ctx.beginPath(); // Roof
+    ctx.moveTo(200, 150);
+    ctx.lineTo(250, 100);
+    ctx.lineTo(300, 150);
+    ctx.fill();
+    ctx.fillStyle = 'black';
+    ctx.fillRect(240, 200, 20, 50); // Door
+  }
+
+  function drawIndoor() {
+    ctx.fillStyle = 'lightgrey';
+    ctx.fillRect(0, 0, canvas.width, canvas.height); // Indoor background
+    ctx.fillStyle = 'burlywood';
+    ctx.fillRect(100, 100, 100, 50); // Bed
+  }
+
+  function drawScene() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+    if (inHouse) {
+      drawIndoor();
+    } else {
+      drawHouse();
+    }
+    drawPlayer();
+  }
+
+  function movePlayer(direction) {
+    if (showingCredits) return;
+    const speed = 10;
+    switch (direction) {
+      case 'up': posY -= speed; break;
+      case 'down': posY += speed; break;
+      case 'left': posX -= speed; break;
+      case 'right': posX += speed; break;
+    }
+    drawScene();
+    checkCollision();
+  }
+
+  function checkCollision() {
+    // Simple collision detection for door and bed
+    if (!inHouse && posX > 240 && posX < 260 && posY > 200 && posY < 250) {
+      inHouse = true;
+      posX = 150; // Reset position for inside
+      posY = 150;
+    } else if (inHouse && posX > 100 && posX < 200 && posY > 100 && posY < 150) {
+      showCredits();
+    }
+         drawScene(); // Redraw scene to reflect the current state
+  }
+
+  function showCredits() {
+    showingCredits = true;
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Credits text
+    const credits = [
+      "Made by Derrick",
+      "Movement by Derrick",
+      "Credits by Derrick",
+      "Everything by Derrick",
+      "For more cool games, look up for krachispace!"
+    ];
+
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arial';
+    credits.forEach((line, index) => {
+      setTimeout(() => {
+        ctx.fillText(line, 50, 100 + (index * 30));
+      }, 1000 * index); // Display each line sequentially
+    });
+
+    // Optionally, reset game or navigate away after credits
+    setTimeout(() => {
+      // Reset game state or redirect
+      showingCredits = false;
+      inHouse = false;
+      posX = 100;
+      posY = 100;
+      drawScene(); // Redraw initial scene
+    }, credits.length * 1500); // Adjust timing based on the number of credits
+  }
+
+  // Initial drawing of the scene
+  drawScene();
+
+  // Event listeners for keyboard controls
+  window.addEventListener('keydown', function(e) {
+    const directionMap = {
+      'ArrowUp': 'up',
+      'ArrowDown': 'down',
+      'ArrowLeft': 'left',
+      'ArrowRight': 'right'
+    };
+    if (directionMap[e.key]) {
+      movePlayer(directionMap[e.key]);
+    }
+  });
+</script>
+</body>
+</html>
